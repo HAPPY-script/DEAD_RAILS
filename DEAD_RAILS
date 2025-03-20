@@ -197,12 +197,12 @@ end
 --no clip
 local HomeFrame = sections["Home"] -- Lấy phần chứa nội dung của tab "Home"
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 
 local noclipEnabled = false
 local menuVisible = false
+local character = player.Character or player.CharacterAdded:Wait()
 
 -- Tạo menu No Clip
 local noclipMenu = Instance.new("Frame")
@@ -262,30 +262,41 @@ userInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Chức năng bật/tắt No Clip
+-- Hàm bật/tắt No Clip
+local function setNoclip(state)
+    if character then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = not state
+            end
+        end
+    end
+end
+
+-- Khi bấm nút bật/tắt
 toggleButton.MouseButton1Click:Connect(function()
     noclipEnabled = not noclipEnabled
     toggleButton.Text = noclipEnabled and "OFF Noclip" or "ON Noclip"
     toggleButton.BackgroundColor3 = noclipEnabled and Color3.new(0, 1, 0) or Color3.new(0.5, 0.5, 0.5)
 
-    while noclipEnabled do
-        for _, part in pairs(character:GetDescendants()) do
-            pcall(function()
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end)
-        end
-        runService.Stepped:Wait()
-    end
-
-    for _, part in pairs(character:GetDescendants()) do
-        pcall(function()
-            if part:IsA("BasePart") then
-                part.CanCollide = true
+    if noclipEnabled then
+        runService.Stepped:Connect(function()
+            if noclipEnabled and character then
+                setNoclip(true)
             end
         end)
+    else
+        setNoclip(false)
     end
+end)
+
+-- Khi nhân vật hồi sinh, reset No Clip về ban đầu
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    noclipEnabled = false -- Tắt No Clip hoàn toàn
+    toggleButton.Text = "ON Noclip" -- Đặt lại nút
+    toggleButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5) -- Màu gốc
+    setNoclip(false) -- Đảm bảo nhân vật không còn No Clip
 end)
 
 -----------------------------------------------------------------------------
