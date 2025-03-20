@@ -4,6 +4,12 @@ if _G.DEAD_RAILS then
 end
 _G.DEAD_RAILS = true
 
+if _G.DEAD_RAILS then
+    warn("Script đã chạy! Không thể chạy lại.")
+    return
+end
+_G.DEAD_RAILS = true
+
 local player = game.Players.LocalPlayer
 local userInputService = game:GetService("UserInputService")
 
@@ -199,7 +205,7 @@ local function CreateButton(parent, text, position, callback)
     Button.MouseButton1Click:Connect(callback)
 end
 
---------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 --no clip
 local HomeFrame = sections["Home"] -- Lấy phần chứa nội dung của tab "Home"
 local player = game.Players.LocalPlayer
@@ -304,7 +310,7 @@ local espEnabled = false
 local menuVisible = false
 local espObjects = {}
 
--- Nút ESP MOD trong tab Home
+-- Nút mở ESP Menu
 local espButton = Instance.new("TextButton", HomeFrame)
 espButton.Size = UDim2.new(0, 300, 0, 40)
 espButton.Position = UDim2.new(0, 10, 0, 10)
@@ -322,6 +328,7 @@ espMenu.BorderSizePixel = 2
 espMenu.Active = true
 espMenu.Visible = false
 
+-- Nút bật/tắt ESP
 local toggleButton = Instance.new("TextButton", espMenu)
 toggleButton.Size = UDim2.new(1, 0, 0.6, 0)
 toggleButton.Position = UDim2.new(0, 0, 0.2, 0)
@@ -329,11 +336,21 @@ toggleButton.Text = "Bật ESP"
 toggleButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 
--- Kéo thả menu
+-- Fix lỗi PE: Đảm bảo menu có thể hiện/tắt đúng cách
+local function updateMenuVisibility()
+    espMenu.Visible = menuVisible
+end
+
+espButton.MouseButton1Click:Connect(function()
+    menuVisible = not menuVisible
+    updateMenuVisibility()
+end)
+
+-- Cơ chế kéo thả (hoạt động trên cả PC & PE)
 local dragging, dragStart, startPos
 
 espMenu.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = espMenu.Position
@@ -341,14 +358,14 @@ espMenu.InputBegan:Connect(function(input)
 end)
 
 espMenu.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
         espMenu.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
 userInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
@@ -356,16 +373,14 @@ end)
 -- Chức năng ESP
 local function createESP(obj)
     if obj:IsA("Model") then
-        -- Viền ESP
         local highlight = Instance.new("Highlight")
         highlight.Adornee = obj
-        highlight.FillColor = Color3.new(1, 0, 0) -- Màu đỏ
-        highlight.OutlineColor = Color3.new(1, 0, 0) -- Viền Red
+        highlight.FillColor = Color3.new(1, 0, 0)
+        highlight.OutlineColor = Color3.new(1, 0, 0)
         highlight.FillTransparency = 1
         highlight.OutlineTransparency = 0
         highlight.Parent = obj
-        
-        -- Tên đối tượng
+
         local billboardGui = Instance.new("BillboardGui")
         billboardGui.Adornee = obj
         billboardGui.Size = UDim2.new(0, 100, 0, 50)
@@ -376,7 +391,7 @@ local function createESP(obj)
         local textLabel = Instance.new("TextLabel")
         textLabel.Size = UDim2.new(1, 0, 1, 0)
         textLabel.BackgroundTransparency = 1
-        textLabel.TextColor3 = Color3.new(1, 0, 0) -- Red
+        textLabel.TextColor3 = Color3.new(1, 0, 0)
         textLabel.TextSize = 16
         textLabel.Font = Enum.Font.SourceSansBold
         textLabel.Text = obj.Name
@@ -387,7 +402,7 @@ local function createESP(obj)
     end
 end
 
--- Tìm tất cả các đối tượng cần ESP
+-- Tìm và tạo ESP
 local function findAndESP()
     local folders = {
         game.Workspace:FindFirstChild("RuntimeEntities"),
@@ -396,7 +411,6 @@ local function findAndESP()
         game.Workspace:FindFirstChild("Animals")
     }
 
-    -- ESP cho các thư mục được chỉ định
     for _, folder in pairs(folders) do
         if folder then
             for _, obj in pairs(folder:GetChildren()) do
@@ -418,18 +432,11 @@ local function toggleESP(state)
     end
 end
 
--- Nút bật/tắt ESP
 toggleButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     toggleButton.Text = espEnabled and "Tắt ESP" or "Bật ESP"
     toggleButton.BackgroundColor3 = espEnabled and Color3.new(0, 1, 0) or Color3.new(0.5, 0.5, 0.5)
     toggleESP(espEnabled)
-end)
-
--- Nút mở menu trong tab Home
-espButton.MouseButton1Click:Connect(function()
-    menuVisible = not menuVisible
-    espMenu.Visible = menuVisible
 end)
 
 ------------------------------------------------------------------------------------------------
@@ -584,10 +591,10 @@ toggleItemButton.MouseButton1Click:Connect(function()
     toggleESPItem(espItemEnabled)
 end)
 
--- Khi bấm vào nút trên tab Home, hiện/ẩn menu ESP Item
+-- Khi bấm vào nút trên tab Home, hiện/ẩn menu ESP ITEM
 espItemButton.MouseButton1Click:Connect(function()
     itemMenuVisible = not itemMenuVisible
-    screenGui.Enabled = itemMenuVisible
+    screenGui.Enabled = itemMenuVisible  -- Sử dụng Enabled thay vì Visible
 end)
 
 -------------------------------------------------------------------------------------------------------
