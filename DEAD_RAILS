@@ -300,7 +300,186 @@ player.CharacterAdded:Connect(function(newCharacter)
     setNoclip(false) -- Đảm bảo nhân vật không còn No Clip
 end)
 
------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+--TP KEY PC
+local HomeFrame = sections["Home"] -- Lấy phần chứa nội dung của tab "Home"
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+-- Biến trạng thái
+local teleportEnabled = false
+local selectedKey = nil
+
+-- Tạo nút bật/tắt chức năng
+local TeleportButton = Instance.new("TextButton", HomeFrame)
+TeleportButton.Size = UDim2.new(0, 190, 0, 40)
+TeleportButton.Position = UDim2.new(0, 10, 0, 60)
+TeleportButton.Text = "[🖥️]Teleport KEY"
+TeleportButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TeleportButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- Tạo ô chọn phím
+local KeySelectBox = Instance.new("TextButton", HomeFrame)
+KeySelectBox.Size = UDim2.new(0, 100, 0, 40)
+KeySelectBox.Position = UDim2.new(0, 210, 0, 60)
+KeySelectBox.Text = "SELECT KEY"
+KeySelectBox.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+KeySelectBox.TextColor3 = Color3.new(1, 1, 1)
+
+-- Chọn phím
+KeySelectBox.MouseButton1Click:Connect(function()
+    KeySelectBox.Text = "Select key..."
+    local keyConnection
+    keyConnection = userInputService.InputBegan:Connect(function(input)
+        selectedKey = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode.Name or input.UserInputType.Name
+        KeySelectBox.Text = selectedKey
+        keyConnection:Disconnect()
+    end)
+end)
+
+-- Chức năng teleport
+local function teleportToMouse()
+    if teleportEnabled and selectedKey then
+        local mouse = player:GetMouse()
+        local targetPosition = Vector3.new(mouse.Hit.Position.X, mouse.Hit.Position.Y, mouse.Hit.Position.Z)
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            local distance = (rootPart.Position - targetPosition).Magnitude
+            if distance <= 20 then
+                rootPart.CFrame = CFrame.new(targetPosition)
+            end
+        end
+    end
+end
+
+-- Bật/tắt chức năng
+TeleportButton.MouseButton1Click:Connect(function()
+    teleportEnabled = not teleportEnabled
+    TeleportButton.Text = teleportEnabled and "[🖥️]OFF Teleport KEY" or "[🖥️]ON Teleport KEY"
+    TeleportButton.BackgroundColor3 = teleportEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
+end)
+
+-- Kiểm tra khi bấm phím để teleport
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and teleportEnabled and selectedKey then
+        local inputName = input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode.Name or input.UserInputType.Name
+        if inputName == selectedKey then
+            teleportToMouse()
+        end
+    end
+end)
+
+-- Reset khi chết
+player.CharacterAdded:Connect(function(newCharacter)
+    teleportEnabled = false
+    selectedKey = nil
+    TeleportButton.Text = "Bật Teleport"
+    TeleportButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    KeySelectBox.Text = "Chọn phím"
+end)
+
+------------------------------------------------------------------------------------------------------------
+--TP BUTTON PE
+local HomeFrame = sections["Home"]
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local mouse = player:GetMouse()
+local teleportEnabled = false
+local tpButtonActive = false
+
+-- Nút bật/tắt chính trong Home
+local TeleportPEButton = Instance.new("TextButton", HomeFrame)
+TeleportPEButton.Size = UDim2.new(0, 300, 0, 40)
+TeleportPEButton.Position = UDim2.new(0, 10, 0, 110)
+TeleportPEButton.Text = "[📱]ON TP"
+TeleportPEButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TeleportPEButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- Tạo nút TP trên màn hình (Không bị mất khi chết)
+local screenGui = Instance.new("ScreenGui", game.CoreGui) -- Chuyển qua CoreGui để tránh bị reset khi chết
+local MobileTPButton = Instance.new("TextButton", screenGui)
+MobileTPButton.Size = UDim2.new(0, 40, 0, 40) -- Nhỏ lại 1/3
+MobileTPButton.Position = UDim2.new(0.92, 0, 0.5, -13) -- Trung điểm cạnh phải
+MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+MobileTPButton.BackgroundTransparency = 0.5 -- Xám trong suốt
+MobileTPButton.Text = "⚡"
+MobileTPButton.TextScaled = true
+MobileTPButton.TextColor3 = Color3.new(1, 1, 1)
+MobileTPButton.Visible = false
+
+-- Bo tròn nút TP
+local UICorner = Instance.new("UICorner", MobileTPButton)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+-- Khi bật chức năng TP
+local function ToggleTeleport()
+    teleportEnabled = not teleportEnabled
+    TeleportPEButton.Text = teleportEnabled and "[📱]OFF TP" or "[📱]ON TP"
+    TeleportPEButton.BackgroundColor3 = teleportEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
+
+    -- Hiện/ẩn nút tròn trên màn hình
+    MobileTPButton.Visible = teleportEnabled
+    tpButtonActive = false
+    MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end
+
+TeleportPEButton.MouseButton1Click:Connect(ToggleTeleport)
+
+-- Khi bấm nút tròn TP
+MobileTPButton.MouseButton1Click:Connect(function()
+    if tpButtonActive then
+        -- Nếu đang chờ TP -> Hủy TP
+        tpButtonActive = false
+        MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Reset lại xám
+    else
+        -- Bật trạng thái chờ TP
+        tpButtonActive = true
+        MobileTPButton.BackgroundColor3 = Color3.fromRGB(0, 0, 139) -- Xanh dương
+    end
+end)
+
+-- Khi click vào màn hình để TP
+local function TeleportToMouse()
+    if teleportEnabled and tpButtonActive then
+        local targetPosition = mouse.Hit.Position
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            local distance = (rootPart.Position - targetPosition).Magnitude
+            if distance <= 20 then
+                rootPart.CFrame = CFrame.new(targetPosition)
+                tpButtonActive = false
+                MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Reset lại xám
+            end
+        end
+    end
+end
+
+-- Cho PC: Bấm chuột trái để TP
+mouse.Button1Down:Connect(TeleportToMouse)
+
+-- Cho PE: Chạm vào màn hình để TP
+userInputService.TouchTap:Connect(function(_, processed)
+    if not processed then
+        TeleportToMouse()
+    end
+end)
+
+-- Reset trạng thái khi chết nhưng KHÔNG mất nút
+player.CharacterAdded:Connect(function()
+    -- Reset trạng thái nhưng KHÔNG xóa nút TP
+    teleportEnabled = false
+    tpButtonActive = false
+    TeleportPEButton.Text = "[📱]ON TP"
+    TeleportPEButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    MobileTPButton.Visible = false
+    MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end)
+
+------------------------------------------------------------------------------------------------------
 --ESP MOD
 local HomeFrame = sections["Visual"]
 local player = game.Players.LocalPlayer
