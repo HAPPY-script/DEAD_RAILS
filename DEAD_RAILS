@@ -104,6 +104,7 @@ end)
 
 -- Danh sách tab (Dễ dàng thêm tab mới)
 local tabs = {
+    {name = "Page change", icon = "rbxthumb://type=Asset&id=1587302690&w=150&h=150"},
     {name = "Home", icon = "rbxthumb://type=Asset&id=13060262582&w=150&h=150"},
     {name = "Visual", icon = "rbxthumb://type=Asset&id=17688532644&w=150&h=150"},
     {name = "Player", icon = "rbxthumb://type=Asset&id=124871982298256&w=150&h=150"},
