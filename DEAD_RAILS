@@ -1,15 +1,3 @@
-if _G.DEAD_RAILS then
-    warn("Script đã chạy! Không thể chạy lại.")
-    return
-end
-_G.DEAD_RAILS = true
-
-if _G.DEAD_RAILS then
-    warn("Script đã chạy! Không thể chạy lại.")
-    return
-end
-_G.DEAD_RAILS = true
-
 local player = game.Players.LocalPlayer
 local userInputService = game:GetService("UserInputService")
 
