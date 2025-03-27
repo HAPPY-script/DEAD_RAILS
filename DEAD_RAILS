@@ -1,3 +1,9 @@
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Dead rails script";
+    Text = "Create by HAPPY script";
+    Duration = 5; --thời gian hiện thông báo
+})
+
 local player = game.Players.LocalPlayer
 local userInputService = game:GetService("UserInputService")
 
