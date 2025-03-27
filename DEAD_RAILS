@@ -322,7 +322,7 @@ local selectedKey = nil
 local TeleportButton = Instance.new("TextButton", HomeFrame)
 TeleportButton.Size = UDim2.new(0, 190, 0, 40)
 TeleportButton.Position = UDim2.new(0, 10, 0, 60)
-TeleportButton.Text = "[🖥️]Teleport KEY"
+TeleportButton.Text = "[🖥️]ON Teleport⚡"
 TeleportButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 TeleportButton.TextColor3 = Color3.new(1, 1, 1)
 
@@ -364,7 +364,7 @@ end
 -- Bật/tắt chức năng
 TeleportButton.MouseButton1Click:Connect(function()
     teleportEnabled = not teleportEnabled
-    TeleportButton.Text = teleportEnabled and "[🖥️]OFF Teleport KEY" or "[🖥️]ON Teleport KEY"
+    TeleportButton.Text = teleportEnabled and "[🖥️]OFF Teleport⚡" or "[🖥️]ON Teleport⚡"
     TeleportButton.BackgroundColor3 = teleportEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
 end)
 
@@ -382,9 +382,9 @@ end)
 player.CharacterAdded:Connect(function(newCharacter)
     teleportEnabled = false
     selectedKey = nil
-    TeleportButton.Text = "Bật Teleport"
+    TeleportButton.Text = "[🖥️]ON Teleport⚡"
     TeleportButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-    KeySelectBox.Text = "Chọn phím"
+    KeySelectBox.Text = "SELECT KEY"
 end)
 
 ------------------------------------------------------------------------------------------------------------
@@ -400,7 +400,7 @@ local tpButtonActive = false
 local TeleportPEButton = Instance.new("TextButton", HomeFrame)
 TeleportPEButton.Size = UDim2.new(0, 300, 0, 40)
 TeleportPEButton.Position = UDim2.new(0, 10, 0, 110)
-TeleportPEButton.Text = "[📱]ON TP"
+TeleportPEButton.Text = "[📱]ON TP⚡"
 TeleportPEButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 TeleportPEButton.TextColor3 = Color3.new(1, 1, 1)
 
@@ -423,7 +423,7 @@ UICorner.CornerRadius = UDim.new(1, 0)
 -- Khi bật chức năng TP
 local function ToggleTeleport()
     teleportEnabled = not teleportEnabled
-    TeleportPEButton.Text = teleportEnabled and "[📱]OFF TP" or "[📱]ON TP"
+    TeleportPEButton.Text = teleportEnabled and "[📱]OFF TP⚡" or "[📱]ON TP⚡"
     TeleportPEButton.BackgroundColor3 = teleportEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
 
     -- Hiện/ẩn nút tròn trên màn hình
@@ -479,7 +479,7 @@ player.CharacterAdded:Connect(function()
     -- Reset trạng thái nhưng KHÔNG xóa nút TP
     teleportEnabled = false
     tpButtonActive = false
-    TeleportPEButton.Text = "[📱]ON TP"
+    TeleportPEButton.Text = "[📱]ON TP⚡"
     TeleportPEButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
     MobileTPButton.Visible = false
     MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
@@ -502,7 +502,7 @@ local waitingForKey = false
 local AimModButton = Instance.new("TextButton", HomeFrame)
 AimModButton.Size = UDim2.new(0, 190, 0, 40)
 AimModButton.Position = UDim2.new(0, 10, 0, 160)
-AimModButton.Text = "[🖥️]ON Aim Mod"
+AimModButton.Text = "[🖥️]ON Aim Mod🎯"
 AimModButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 AimModButton.TextColor3 = Color3.new(1, 1, 1)
 
@@ -517,7 +517,7 @@ KeybindButton.TextColor3 = Color3.new(1, 1, 1)
 -- 🔹 Khi bấm nút bật Aim Mod
 AimModButton.MouseButton1Click:Connect(function()
     aimModEnabled = not aimModEnabled
-    AimModButton.Text = aimModEnabled and "[🖥️]OFF Aim Mod" or "[🖥️]ON Aim Mod"
+    AimModButton.Text = aimModEnabled and "[🖥️]OFF Aim Mod🎯" or "[🖥️]ON Aim Mod🎯"
     AimModButton.BackgroundColor3 = aimModEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
 end)
 
@@ -592,8 +592,122 @@ runService.RenderStepped:Connect(AimAtTarget)
 player.CharacterAdded:Connect(function()
     aimModEnabled = false
     isKeyHeld = false
-    AimModButton.Text = "Bật Aim Mod"
+    AimModButton.Text = "[🖥️]ON Aim Mod🎯"
     AimModButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+end)
+
+-------------------------------------------------------------------------------------------------------------------------------
+--AIMBOT MOD PE
+local HomeFrame = sections["Home"]
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local mouse = player:GetMouse()
+
+local silentAimEnabled = false
+local isAimHeld = false
+
+-- 🟢 NÚT BẬT/TẮT AIM (TRONG HOME TAB)
+local AimButton = Instance.new("TextButton", HomeFrame)
+AimButton.Size = UDim2.new(0, 300, 0, 40)
+AimButton.Position = UDim2.new(0, 10, 0, 210)
+AimButton.Text = "[📱]ON Aim Mod🎯"
+AimButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+AimButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- 🟢 NÚT AIM TRÊN MÀN HÌNH (DÀNH CHO PE)
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+local MobileAimButton = Instance.new("TextButton", screenGui)
+MobileAimButton.Size = UDim2.new(0, 40, 0, 40) 
+MobileAimButton.Position = UDim2.new(0.92, 0, 0.5, -70) -- CAO HƠN NÚT TP
+MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+MobileAimButton.BackgroundTransparency = 0.5
+MobileAimButton.Text = "🎯"
+MobileAimButton.TextScaled = true
+MobileAimButton.TextColor3 = Color3.new(1, 1, 1)
+MobileAimButton.Visible = false
+
+-- Bo tròn nút Aim
+local UICorner = Instance.new("UICorner", MobileAimButton)
+UICorner.CornerRadius = UDim.new(1, 0)
+
+-- 🟢 BẬT/TẮT CHỨC NĂNG AIM
+local function ToggleAim()
+    silentAimEnabled = not silentAimEnabled
+    AimButton.Text = silentAimEnabled and "[📱]OFF Aim Mod🎯" or "[📱]ON Aim Mod🎯"
+    AimButton.BackgroundColor3 = silentAimEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
+
+    -- Hiện nút Aim khi bật chức năng
+    MobileAimButton.Visible = silentAimEnabled
+    MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+end
+
+AimButton.MouseButton1Click:Connect(ToggleAim)
+
+-- 🟢 GIỮ NÚT AIM ĐỂ BẬT AIM MOD
+MobileAimButton.MouseButton1Down:Connect(function()
+    if silentAimEnabled then
+        isAimHeld = true
+        MobileAimButton.BackgroundColor3 = Color3.fromRGB(0, 0, 139) -- Chuyển sang màu xanh dương khi giữ
+    end
+end)
+
+MobileAimButton.MouseButton1Up:Connect(function()
+    isAimHeld = false
+    MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- Reset về màu xám
+end)
+
+-- 🟢 HÀM TÌM VÀ AIM VÀO ZOMBIE
+local function GetClosestZombieHeadInRange()
+    local closestHead = nil
+    local closestScreenDistance = math.huge
+    local crosshairPosition = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    local maxRadius = 200
+
+    local runtimeItemsFolder = workspace:FindFirstChild("RuntimeItems")
+
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") and obj.Name == "Head" and obj.Parent:IsA("Model") then
+            local model = obj.Parent
+            local isPlayer = game.Players:GetPlayerFromCharacter(model) ~= nil
+            local isInRuntimeItems = runtimeItemsFolder and obj:IsDescendantOf(runtimeItemsFolder)
+
+            if not isPlayer and not isInRuntimeItems then
+                local screenPoint, onScreen = camera:WorldToViewportPoint(obj.Position)
+                if onScreen then
+                    local screenPosition = Vector2.new(screenPoint.X, screenPoint.Y)
+                    local screenDistance = (screenPosition - crosshairPosition).magnitude
+                    if screenDistance < closestScreenDistance and screenDistance <= maxRadius then
+                        closestScreenDistance = screenDistance
+                        closestHead = obj
+                    end
+                end
+            end
+        end
+    end
+    return closestHead
+end
+
+local function AimAtZombieHead()
+    if not silentAimEnabled or not isAimHeld then return end
+
+    local targetHead = GetClosestZombieHeadInRange()
+    if targetHead then
+        camera.CFrame = CFrame.new(camera.CFrame.Position, targetHead.Position)
+    end
+end
+
+runService.RenderStepped:Connect(AimAtZombieHead)
+
+-- 🟢 RESET TRẠNG THÁI KHI CHẾT
+player.CharacterAdded:Connect(function()
+    silentAimEnabled = false
+    isAimHeld = false
+    AimButton.Text = "[📱]ON Aim Mod🎯"
+    AimButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    MobileAimButton.Visible = false
+    MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 end)
 
 ------------------------------------------------------------------------------------------------------
