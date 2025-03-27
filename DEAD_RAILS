@@ -479,6 +479,117 @@ player.CharacterAdded:Connect(function()
     MobileTPButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 end)
 
+-------------------------------------------------------------------------------------------------------
+--AIMBOT MOD
+local HomeFrame = sections["Home"]
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+local aimModEnabled = false
+local selectedKey = Enum.KeyCode.F
+local isKeyHeld = false
+local waitingForKey = false
+
+-- 🟢 Nút bật/tắt Aim Mod
+local AimModButton = Instance.new("TextButton", HomeFrame)
+AimModButton.Size = UDim2.new(0, 190, 0, 40)
+AimModButton.Position = UDim2.new(0, 10, 0, 160)
+AimModButton.Text = "[🖥️]ON Aim Mod"
+AimModButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+AimModButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- 🔵 Nút chọn phím Aim Mod
+local KeybindButton = Instance.new("TextButton", HomeFrame)
+KeybindButton.Size = UDim2.new(0, 100, 0, 40)
+KeybindButton.Position = UDim2.new(0, 210, 0, 160)
+KeybindButton.Text = "Select key: F"
+KeybindButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.8)
+KeybindButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- 🔹 Khi bấm nút bật Aim Mod
+AimModButton.MouseButton1Click:Connect(function()
+    aimModEnabled = not aimModEnabled
+    AimModButton.Text = aimModEnabled and "[🖥️]OFF Aim Mod" or "[🖥️]ON Aim Mod"
+    AimModButton.BackgroundColor3 = aimModEnabled and Color3.new(0, 1, 0) or Color3.new(0.2, 0.2, 0.2)
+end)
+
+-- 🔹 Khi bấm nút chọn phím
+KeybindButton.MouseButton1Click:Connect(function()
+    KeybindButton.Text = "Select key..."
+    waitingForKey = true
+end)
+
+-- 🔹 Xử lý chọn phím và bấm giữ phím
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if waitingForKey and input.UserInputType == Enum.UserInputType.Keyboard then
+        selectedKey = input.KeyCode
+        KeybindButton.Text = "Select key: " .. tostring(selectedKey):gsub("Enum.KeyCode.", "")
+        waitingForKey = false
+    elseif input.KeyCode == selectedKey then
+        isKeyHeld = true
+    end
+end)
+
+userInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == selectedKey then
+        isKeyHeld = false
+    end
+end)
+
+-- 🔹 **Tìm kẻ địch gần nhất để Aim**
+local function GetClosestEnemyHead()
+    local closestHead = nil
+    local closestDistance = math.huge
+    local crosshair = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    local maxRadius = 200
+
+    -- Loại trừ người chơi & đồ vật trong "RuntimeItems"
+    local runtimeItems = workspace:FindFirstChild("RuntimeItems")
+
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") and obj.Name == "Head" and obj.Parent:IsA("Model") then
+            local model = obj.Parent
+            local isPlayer = game.Players:GetPlayerFromCharacter(model) ~= nil
+            local isRuntimeItem = runtimeItems and obj:IsDescendantOf(runtimeItems)
+
+            if not isPlayer and not isRuntimeItem then -- Chỉ aim vào NPC
+                local screenPoint, onScreen = camera:WorldToViewportPoint(obj.Position)
+                if onScreen then
+                    local screenPos = Vector2.new(screenPoint.X, screenPoint.Y)
+                    local screenDistance = (screenPos - crosshair).magnitude
+                    if screenDistance < closestDistance and screenDistance <= maxRadius then
+                        closestDistance = screenDistance
+                        closestHead = obj
+                    end
+                end
+            end
+        end
+    end
+    return closestHead
+end
+
+-- 🔹 **Cập nhật Aim**
+local function AimAtTarget()
+    if not aimModEnabled or not isKeyHeld then return end
+
+    local targetHead = GetClosestEnemyHead()
+    if targetHead then
+        camera.CFrame = CFrame.new(camera.CFrame.Position, targetHead.Position)
+    end
+end
+
+runService.RenderStepped:Connect(AimAtTarget)
+
+-- 🔄 **Reset trạng thái khi hồi sinh**
+player.CharacterAdded:Connect(function()
+    aimModEnabled = false
+    isKeyHeld = false
+    AimModButton.Text = "Bật Aim Mod"
+    AimModButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+end)
+
 ------------------------------------------------------------------------------------------------------
 --ESP MOD
 local HomeFrame = sections["Visual"]
