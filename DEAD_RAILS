@@ -709,6 +709,130 @@ player.CharacterAdded:Connect(function()
     MobileAimButton.Visible = false
     MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 end)
+---------------------------------------------------------------------------------------------------------------
+--RUN ON AIR
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- Tạo phiến block
+local block = Instance.new("Part")
+block.Size = Vector3.new(5, 2, 5) -- Kích thước mặc định (5x2x5)
+block.Anchored = true
+block.Transparency = 0.9
+block.CanCollide = true
+block.Parent = workspace
+
+-- Tạo GUI chỉnh độ dày cho Run On Air
+local HomeFrame = sections["Home"]
+local ThicknessFrame = Instance.new("Frame", HomeFrame)
+ThicknessFrame.Size = UDim2.new(0, 200, 0, 40)
+ThicknessFrame.Position = UDim2.new(0, 10, 0, 260)
+ThicknessFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+local MinusButton = Instance.new("TextButton", ThicknessFrame)
+MinusButton.Size = UDim2.new(0, 40, 1, 0)
+MinusButton.Position = UDim2.new(0, 0, 0, 0)
+MinusButton.Text = "<"
+MinusButton.TextColor3 = Color3.new(1, 1, 1)
+MinusButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+
+local PlusButton = Instance.new("TextButton", ThicknessFrame)
+PlusButton.Size = UDim2.new(0, 40, 1, 0)
+PlusButton.Position = UDim2.new(1, -40, 0, 0)
+PlusButton.Text = ">"
+PlusButton.TextColor3 = Color3.new(1, 1, 1)
+PlusButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+
+local ThicknessLabel = Instance.new("TextLabel", ThicknessFrame)
+ThicknessLabel.Size = UDim2.new(1, -80, 1, 0)
+ThicknessLabel.Position = UDim2.new(0, 40, 0, 0)
+ThicknessLabel.Text = "[0-2]"
+ThicknessLabel.TextColor3 = Color3.new(1, 1, 1)
+ThicknessLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ThicknessLabel.TextScaled = true
+
+-- Giá trị độ dày phiến
+local thicknessValue = 0
+
+-- Hàm cập nhật độ dày phiến & điều chỉnh vị trí nhân vật
+local function UpdateThickness()
+    local newThickness = 2 + thicknessValue -- Độ dày bắt đầu từ 2
+    local newY = -0.50 + (newThickness - 2) -- Điều chỉnh Y để nhân vật luôn giữ nguyên độ cao
+
+    block.Size = Vector3.new(5, newThickness, 5)
+    block.Position = Vector3.new(block.Position.X, newY, block.Position.Z)
+
+    -- Cập nhật hiển thị độ dày
+    ThicknessLabel.Text = "[" .. thicknessValue .. "]"
+end
+
+-- Nút tăng độ dày
+PlusButton.MouseButton1Click:Connect(function()
+    if thicknessValue < 2 then -- Giới hạn 2
+        thicknessValue = thicknessValue + 1
+        UpdateThickness()
+    end
+end)
+
+-- Nút giảm độ dày
+MinusButton.MouseButton1Click:Connect(function()
+    if thicknessValue > 0 then
+        thicknessValue = thicknessValue - 1
+        UpdateThickness()
+    end
+end)
+
+-- Hàm cập nhật vị trí block theo nhân vật
+local function updateBlockPosition(character)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    -- Cập nhật liên tục
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if humanoidRootPart and humanoidRootPart.Parent then
+            block.Position = Vector3.new(humanoidRootPart.Position.X, block.Position.Y, humanoidRootPart.Position.Z)
+
+            -- Đảm bảo nhân vật không rơi xuống dưới block
+            if humanoidRootPart.Position.Y < block.Position.Y then
+                block.CanCollide = false
+            else
+                block.CanCollide = true
+            end
+        else
+            connection:Disconnect()
+        end
+    end)
+
+    -- Khi chết, ngắt kết nối để tránh lỗi
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        connection:Disconnect()
+    end)
+end
+
+-- Khi hồi sinh, tiếp tục cập nhật block
+player.CharacterAdded:Connect(function(character)
+    updateBlockPosition(character)
+end)
+
+-- Nếu nhân vật đã tồn tại, cập nhật ngay
+if player.Character then
+    updateBlockPosition(player.Character)
+end
+
+--title
+-- Thêm Title vào Tab Home
+local HomeFrame = sections["Home"]
+
+local Title = Instance.new("TextLabel", HomeFrame)
+Title.Size = UDim2.new(0, 100, 0, 40)
+Title.Position = UDim2.new(0, 210, 0, 260)
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Text = "Air floor"
+Title.TextScaled = true
+Title.Font = Enum.Font.SourceSansBold
+Title.BorderSizePixel = 2
+Title.BorderColor3 = Color3.new(255, 255, 255)
 
 ------------------------------------------------------------------------------------------------------
 --ESP MOD
