@@ -716,7 +716,7 @@ local RunService = game:GetService("RunService")
 
 -- Tạo phiến block
 local block = Instance.new("Part")
-block.Size = Vector3.new(5, 2, 5) -- Kích thước mặc định (5x2x5)
+block.Size = Vector3.new(2, 2, 2) -- Kích thước mặc định (5x2x5)
 block.Anchored = true
 block.Transparency = 0.8
 block.CanCollide = true
@@ -759,7 +759,7 @@ local function UpdateThickness()
     local newThickness = 2 + thicknessValue -- Độ dày bắt đầu từ 2
     local newY = -0.50 + (newThickness - 2) -- Điều chỉnh Y để nhân vật luôn giữ nguyên độ cao
 
-    block.Size = Vector3.new(5, newThickness, 5)
+    block.Size = Vector3.new(2, newThickness, 2)
     block.Position = Vector3.new(block.Position.X, newY, block.Position.Z)
 
     -- Cập nhật hiển thị độ dày
