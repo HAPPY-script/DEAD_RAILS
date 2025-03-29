@@ -718,7 +718,7 @@ local RunService = game:GetService("RunService")
 local block = Instance.new("Part")
 block.Size = Vector3.new(5, 2, 5) -- Kích thước mặc định (5x2x5)
 block.Anchored = true
-block.Transparency = 0.9
+block.Transparency = 0.8
 block.CanCollide = true
 block.Parent = workspace
 
