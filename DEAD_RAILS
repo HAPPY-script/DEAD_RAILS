@@ -710,17 +710,9 @@ player.CharacterAdded:Connect(function()
     MobileAimButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 end)
 ---------------------------------------------------------------------------------------------------------------
---RUN ON AIR
+--AIR FLOOR
 local player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
-
--- Tạo phiến block
-local block = Instance.new("Part")
-block.Size = Vector3.new(2, 2, 2) -- Kích thước mặc định (5x2x5)
-block.Anchored = true
-block.Transparency = 0.8
-block.CanCollide = true
-block.Parent = workspace
 
 -- Tạo GUI chỉnh độ dày cho Run On Air
 local HomeFrame = sections["Home"]
@@ -753,14 +745,31 @@ ThicknessLabel.TextScaled = true
 
 -- Giá trị độ dày phiến
 local thicknessValue = 0
+local block = nil -- Biến lưu phiến hiện tại
+local connection = nil -- Biến lưu kết nối RenderStepped
 
--- Hàm cập nhật độ dày phiến & điều chỉnh vị trí nhân vật
+-- Hàm tạo phiến mới
+local function createBlock()
+    if block then
+        block:Destroy() -- Xóa phiến cũ nếu tồn tại
+    end
+    block = Instance.new("Part")
+    block.Size = Vector3.new(2, 2, 2) -- Kích thước mặc định (2x2x2)
+    block.Anchored = true
+    block.Transparency = 0.8
+    block.CanCollide = true
+    block.Parent = workspace
+end
+
+-- Hàm cập nhật độ dày phiến
 local function UpdateThickness()
     local newThickness = 2 + thicknessValue -- Độ dày bắt đầu từ 2
     local newY = -0.50 + (newThickness - 2) -- Điều chỉnh Y để nhân vật luôn giữ nguyên độ cao
 
-    block.Size = Vector3.new(2, newThickness, 2)
-    block.Position = Vector3.new(block.Position.X, newY, block.Position.Z)
+    if block then
+        block.Size = Vector3.new(2, newThickness, 2)
+        block.Position = Vector3.new(block.Position.X, newY, block.Position.Z)
+    end
 
     -- Cập nhật hiển thị độ dày
     ThicknessLabel.Text = "[" .. thicknessValue .. "]"
@@ -782,14 +791,20 @@ MinusButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Hàm cập nhật vị trí block theo nhân vật
+-- Hàm cập nhật vị trí phiến theo nhân vật
 local function updateBlockPosition(character)
+    if connection then
+        connection:Disconnect() -- Ngắt kết nối cũ nếu có
+    end
+
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-    -- Cập nhật liên tục
-    local connection
+    -- Tạo phiến mới
+    createBlock()
+    
+    -- Kết nối cập nhật liên tục
     connection = RunService.RenderStepped:Connect(function()
-        if humanoidRootPart and humanoidRootPart.Parent then
+        if humanoidRootPart and humanoidRootPart.Parent and block then
             block.Position = Vector3.new(humanoidRootPart.Position.X, block.Position.Y, humanoidRootPart.Position.Z)
 
             -- Đảm bảo nhân vật không rơi xuống dưới block
@@ -803,13 +818,14 @@ local function updateBlockPosition(character)
         end
     end)
 
-    -- Khi chết, ngắt kết nối để tránh lỗi
+    -- Khi nhân vật chết, reset lại phiến
     character:WaitForChild("Humanoid").Died:Connect(function()
         connection:Disconnect()
+        createBlock() -- Reset phiến
     end)
 end
 
--- Khi hồi sinh, tiếp tục cập nhật block
+-- Khi hồi sinh, tạo lại phiến và cập nhật vị trí
 player.CharacterAdded:Connect(function(character)
     updateBlockPosition(character)
 end)
