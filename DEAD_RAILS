@@ -1,7 +1,8 @@
 game.StarterGui:SetCore("SendNotification", {
-    Title = "Dead rails script";
+    Title = "Dead Rails";
     Text = "Create by HAPPY script";
-    Duration = 5; --thời gian hiện thông báo
+    Duration = 7;
+    Icon = "rbxthumb://type=Asset&id=82587810774099&w=150&h=150";
 })
 
 local player = game.Players.LocalPlayer
@@ -850,7 +851,148 @@ Title.Font = Enum.Font.SourceSansBold
 Title.BorderSizePixel = 2
 Title.BorderColor3 = Color3.new(255, 255, 255)
 
-------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------
+--KILL AREA GUN + auto reload
+local HomeFrame = sections["Home"]
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ShootRemote = ReplicatedStorage.Remotes.Weapon.Shoot
+local ReloadRemote = ReplicatedStorage.Remotes.Weapon.Reload
+local workspace = game.Workspace
+local Camera = workspace.CurrentCamera
+
+-- Biến cấu hình
+local AutoHeadshotEnabled = false
+local AutoReloadEnabled = false  -- Biến cấu hình cho Auto Reload
+local selectedWeapon = nil
+local GunAuraAllMobs = true
+local HEADSHOT_DELAY = 0.15
+local SEARCH_RADIUS = 150
+
+-- Danh sách vũ khí hỗ trợ
+local SupportedWeapons = {
+    "Revolver",
+    "Rifle",
+    "Sawed-Off Shotgun",
+    "Shotgun",
+    "Shovel",
+    "Bolt ActionRifle"
+}
+
+-- Nút bật/tắt Auto Headshot
+local HeadshotButton = Instance.new("TextButton", HomeFrame)
+HeadshotButton.Size = UDim2.new(0, 190, 0, 40)
+HeadshotButton.Position = UDim2.new(0, 10, 0, 310)
+HeadshotButton.Text = "[🎯]ON GUN KILL AREA"
+HeadshotButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+HeadshotButton.TextColor3 = Color3.new(1, 1, 1)
+
+HeadshotButton.MouseButton1Click:Connect(function()
+    AutoHeadshotEnabled = not AutoHeadshotEnabled
+    HeadshotButton.Text = AutoHeadshotEnabled and "[🎯]OFF GUN KILL AREA" or "[🎯]ON GUN KILL AREA"
+    HeadshotButton.BackgroundColor3 = AutoHeadshotEnabled and Color3.fromRGB(0, 170, 0) or Color3.new(0.2, 0.2, 0.2)
+end)
+
+-- Nút bật/tắt Auto Reload
+local AutoReloadButton = Instance.new("TextButton", HomeFrame)
+AutoReloadButton.Size = UDim2.new(0, 300, 0, 40)
+AutoReloadButton.Position = UDim2.new(0, 10, 0, 360)  -- Vị trí dưới nút Auto Headshot
+AutoReloadButton.Text = "[🔄]OFF Auto Reload [select weapon]"
+AutoReloadButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+AutoReloadButton.TextColor3 = Color3.new(1, 1, 1)
+
+AutoReloadButton.MouseButton1Click:Connect(function()
+    AutoReloadEnabled = not AutoReloadEnabled
+    AutoReloadButton.Text = AutoReloadEnabled and "[🔄]ON Auto Reload [select weapon]" or "[🔄]OFF Auto Reload [select weapon]"
+    AutoReloadButton.BackgroundColor3 = AutoReloadEnabled and Color3.fromRGB(0, 170, 0) or Color3.new(0.2, 0.2, 0.2)
+end)
+
+-- Nút chọn vũ khí
+local WeaponSelect = Instance.new("TextButton", HomeFrame)
+WeaponSelect.Size = UDim2.new(0, 100, 0, 40)
+WeaponSelect.Position = UDim2.new(0, 210, 0, 310)
+WeaponSelect.Text = "Select Weapon"
+WeaponSelect.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)
+WeaponSelect.TextColor3 = Color3.new(1, 1, 1)
+
+WeaponSelect.MouseButton1Click:Connect(function()
+    for _, name in ipairs(SupportedWeapons) do
+        local tool = player.Character and player.Character:FindFirstChild(name)
+        if tool then
+            selectedWeapon = tool
+            WeaponSelect.Text = "Using: " .. name
+            return
+        end
+    end
+    WeaponSelect.Text = "No Weapon!"
+end)
+
+-- Kiểm tra có phải người chơi không
+local function isPlayerModel(m)
+    for _, p in ipairs(game.Players:GetPlayers()) do
+        if p.Character == m then return true end
+    end
+    return false
+end
+
+-- Lấy NPC gần trong phạm vi
+local function findAllNPCsInRange()
+    local npcs = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and not isPlayerModel(obj) then
+            local hum = obj:FindFirstChildOfClass("Humanoid")
+            local head = obj:FindFirstChild("Head")
+            if hum and head and hum.Health > 0 then
+                local dist = (head.Position - Camera.CFrame.Position).Magnitude
+                if dist <= SEARCH_RADIUS then
+                    table.insert(npcs, {model = obj, hum = hum, head = head})
+                end
+            end
+        end
+    end
+    return npcs
+end
+
+-- Vòng lặp Auto Reload
+task.spawn(function()
+    while true do
+        if AutoReloadEnabled and selectedWeapon then
+            local tool = selectedWeapon
+            ReloadRemote:FireServer(workspace:GetServerTimeNow(), tool)
+        end
+        task.wait(0.01)  -- Tự động nạp lại mỗi giây nếu bật Auto Reload
+    end
+end)
+
+-- Vòng lặp headshot
+task.spawn(function()
+    while true do
+        if AutoHeadshotEnabled and selectedWeapon then
+            local npcs = findAllNPCsInRange()
+            for _, npc in ipairs(npcs) do
+                local pelletTable = {}
+                if selectedWeapon.Name == "Shotgun" or selectedWeapon.Name == "Sawed-Off Shotgun" then
+                    for i = 1, 6 do
+                        pelletTable[tostring(i)] = npc.hum
+                    end
+                else
+                    pelletTable["1"] = npc.hum
+                end
+                local shootArgs = {
+                    workspace:GetServerTimeNow(),
+                    selectedWeapon,
+                    CFrame.new(Camera.CFrame.Position, npc.head.Position),
+                    pelletTable
+                }
+                ShootRemote:FireServer(unpack(shootArgs))
+            end
+        end
+        task.wait(HEADSHOT_DELAY)
+    end
+end)
+
+----------------------------------------------------------------------------------------------------------------------
 --ESP MOD
 local HomeFrame = sections["Visual"]
 local player = game.Players.LocalPlayer
