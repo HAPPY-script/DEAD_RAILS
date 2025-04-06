@@ -1002,7 +1002,7 @@ local hrp = char:WaitForChild("HumanoidRootPart")
 local M1_CFrame = CFrame.new(-424.44, 27.52, -49040.60)
 local TOLERANCE = 20
 
--- 🟡 Create TP button
+-- Tạo nút teleport
 local TpButton = Instance.new("TextButton", HomeFrame)
 TpButton.Size = UDim2.new(0, 300, 0, 40)
 TpButton.Position = UDim2.new(0, 10, 0, 410)
@@ -1010,31 +1010,7 @@ TpButton.Text = "[🛰️]Teleport to end"
 TpButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 TpButton.TextColor3 = Color3.new(1, 1, 1)
 
--- 🔹 Check if near M1
-local function isAtM1()
-    return (hrp.Position - M1_CFrame.Position).Magnitude <= TOLERANCE
-end
-
--- 🔹 Function to lock at M1
-local function lockToM1(duration)
-    local startTime = tick()
-
-    local connection
-    connection = game:GetService("RunService").Heartbeat:Connect(function()
-        if not isAtM1() then
-            hrp.CFrame = M1_CFrame
-        end
-        if not humanoid.Sit then
-            humanoid.Sit = true
-        end
-        if tick() - startTime >= duration then
-            humanoid.Sit = false
-            connection:Disconnect()
-        end
-    end)
-end
-
--- 🔹 Notification function with images based on conditions
+-- Thông báo
 local function showNotification(id, title, text)
     game.StarterGui:SetCore("SendNotification", {
         Title = title,
@@ -1044,10 +1020,50 @@ local function showNotification(id, title, text)
     })
 end
 
--- 🔹 Button click behavior
+-- Quá trình teleport chia 3 giai đoạn
+local function startTeleportProcess()
+    -- Phase 1: Teleport 1 lần
+    humanoid.Sit = true
+    hrp.CFrame = M1_CFrame
+    showNotification("88612410711327", "Phase 1", "Teleporting in progress. Please do not jump.")
+
+    -- Phase 2: Chờ 3 giây
+    task.wait(3)
+    showNotification("126835636785668", "Phase 2", "Teleporting in progress. Please do not jump.")
+
+    -- Phase 3: Teleport liên tục đến khi không còn ngồi
+    showNotification("73497606950262", "Phase 3", "To complete the process, please jump.")
+
+    local stopFlag = false
+    local sittingTime = 0
+    local stopAfterJumpTime = nil
+
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if hrp and humanoid then
+            -- Luôn teleport liên tục
+            hrp.CFrame = M1_CFrame
+
+            -- Nếu không còn ngồi → bắt đầu đếm thời gian để dừng
+            if not humanoid.Sit then
+                if not stopAfterJumpTime then
+                    stopAfterJumpTime = tick() + 2
+                elseif tick() >= stopAfterJumpTime then
+                    -- Sau 2s kể từ khi hết ngồi → dừng
+                    connection:Disconnect()
+                    showNotification("12348387897", "✅Completed", "Teleport process ended.")
+                end
+            else
+                -- Nếu vẫn ngồi thì reset đồng hồ dừng
+                stopAfterJumpTime = nil
+            end
+        end
+    end)
+end
+
+-- Khi nhấn nút
 TpButton.MouseButton1Click:Connect(function()
     if not humanoid.Sit then
-        -- Condition 1: Not sitting (Image: chair)
         showNotification("76581612967106", "🚫Teleport Failed", "You must sit on the train to teleport.")
         task.wait(0.5)
         showNotification("76581612967106", "💡Tip", "Sit on the train seat to teleport.")
@@ -1055,19 +1071,17 @@ TpButton.MouseButton1Click:Connect(function()
     end
 
     if not AutoHeadshotEnabled then
-        -- Condition 2: Auto Headshot not enabled (Image: enabled)
         showNotification("131214341128093", "🚫Teleport Failed", "Please enable Gun Kill Area.")
         return
     end
 
     if selectedWeapon == nil then
-        -- Condition 3: No weapon selected (Image: gun)
         showNotification("137342102999169", "🚫Teleport Failed", "You need to choose 1 weapon.")
         return
     end
 
-    -- ✅ All conditions met
-    lockToM1(5)
+    -- Bắt đầu quá trình teleport
+    startTeleportProcess()
 end)
 
 ----------------------------------------------------------------------------------------------------------------------
