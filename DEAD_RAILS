@@ -991,6 +991,84 @@ task.spawn(function()
         task.wait(HEADSHOT_DELAY)
     end
 end)
+---------------------------------------------------------------------------------------------------------------------
+--TP TO END
+local HomeFrame = sections["Home"]
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local M1_CFrame = CFrame.new(-424.44, 27.52, -49040.60)
+local TOLERANCE = 20
+
+-- 🟡 Create TP button
+local TpButton = Instance.new("TextButton", HomeFrame)
+TpButton.Size = UDim2.new(0, 300, 0, 40)
+TpButton.Position = UDim2.new(0, 10, 0, 410)
+TpButton.Text = "[🛰️]Teleport to end"
+TpButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TpButton.TextColor3 = Color3.new(1, 1, 1)
+
+-- 🔹 Check if near M1
+local function isAtM1()
+    return (hrp.Position - M1_CFrame.Position).Magnitude <= TOLERANCE
+end
+
+-- 🔹 Function to lock at M1
+local function lockToM1(duration)
+    local startTime = tick()
+
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not isAtM1() then
+            hrp.CFrame = M1_CFrame
+        end
+        if not humanoid.Sit then
+            humanoid.Sit = true
+        end
+        if tick() - startTime >= duration then
+            humanoid.Sit = false
+            connection:Disconnect()
+        end
+    end)
+end
+
+-- 🔹 Notification function with images based on conditions
+local function showNotification(id, title, text)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = 10,
+        Icon = "rbxthumb://type=Asset&id=" .. id .. "&w=150&h=150"
+    })
+end
+
+-- 🔹 Button click behavior
+TpButton.MouseButton1Click:Connect(function()
+    if not humanoid.Sit then
+        -- Condition 1: Not sitting (Image: chair)
+        showNotification("76581612967106", "🚫Teleport Failed", "You must sit on the train to teleport.")
+        task.wait(0.5)
+        showNotification("76581612967106", "💡Tip", "Sit on the train seat to teleport.")
+        return
+    end
+
+    if not AutoHeadshotEnabled then
+        -- Condition 2: Auto Headshot not enabled (Image: enabled)
+        showNotification("131214341128093", "🚫Teleport Failed", "Please enable Gun Kill Area.")
+        return
+    end
+
+    if selectedWeapon == nil then
+        -- Condition 3: No weapon selected (Image: gun)
+        showNotification("137342102999169", "🚫Teleport Failed", "You need to choose 1 weapon.")
+        return
+    end
+
+    -- ✅ All conditions met
+    lockToM1(10)
+end)
 
 ----------------------------------------------------------------------------------------------------------------------
 --ESP MOD
