@@ -1067,7 +1067,7 @@ TpButton.MouseButton1Click:Connect(function()
     end
 
     -- ✅ All conditions met
-    lockToM1(10)
+    lockToM1(5)
 end)
 
 ----------------------------------------------------------------------------------------------------------------------
