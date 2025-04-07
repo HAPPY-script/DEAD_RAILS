@@ -1020,44 +1020,48 @@ local function showNotification(id, title, text)
     })
 end
 
--- Quá trình teleport chia 3 giai đoạn
+-- Quá trình teleport
 local function startTeleportProcess()
-    -- Phase 1: Teleport 1 lần
     humanoid.Sit = true
-    hrp.CFrame = M1_CFrame
     showNotification("88612410711327", "Phase 1", "Teleporting in progress. Please do not jump.")
 
-    -- Phase 2: Chờ 3 giây
-    task.wait(3)
-    showNotification("126835636785668", "Phase 2", "Teleporting in progress. Please do not jump.")
+    -- 🟢 Phase 1: Teleport liên tục trong 5 giây
+    local phase1End = tick() + 5
+    local phase1Connection
+    phase1Connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if tick() >= phase1End then
+            phase1Connection:Disconnect()
+        else
+            hrp.CFrame = M1_CFrame
+        end
+    end)
 
-    -- Phase 3: Teleport liên tục đến khi không còn ngồi
-    showNotification("73497606950262", "Phase 3", "To complete the process, please jump.")
+    -- Sau 5 giây, tiến đến Phase 2
+    task.delay(5, function()
+        showNotification("126835636785668", "Phase 2", "Teleporting in progress. Please do not jump.")
 
-    local stopFlag = false
-    local sittingTime = 0
-    local stopAfterJumpTime = nil
+        -- 🟡 Phase 2: Dừng 2 giây không teleport
+        task.wait(2)
 
-    local connection
-    connection = game:GetService("RunService").Heartbeat:Connect(function()
-        if hrp and humanoid then
-            -- Luôn teleport liên tục
+        -- 🔴 Phase 3: Teleport liên tục cho đến khi hết ngồi
+        showNotification("73497606950262", "Phase 3", "To complete the process, please jump.")
+
+        local stopAfterJumpTime = nil
+        local phase3Connection
+        phase3Connection = game:GetService("RunService").Heartbeat:Connect(function()
             hrp.CFrame = M1_CFrame
 
-            -- Nếu không còn ngồi → bắt đầu đếm thời gian để dừng
             if not humanoid.Sit then
                 if not stopAfterJumpTime then
-                    stopAfterJumpTime = tick() + 2
+                    stopAfterJumpTime = tick() + 3
                 elseif tick() >= stopAfterJumpTime then
-                    -- Sau 2s kể từ khi hết ngồi → dừng
-                    connection:Disconnect()
-                    showNotification("12348387897", "✅Completed", "Teleport process ended.")
+                    phase3Connection:Disconnect()
+                    showNotification("13693399274", "✅Completed", "Teleport process ended.")
                 end
             else
-                -- Nếu vẫn ngồi thì reset đồng hồ dừng
-                stopAfterJumpTime = nil
+                stopAfterJumpTime = nil -- Reset nếu người chơi ngồi lại
             end
-        end
+        end)
     end)
 end
 
@@ -1080,7 +1084,6 @@ TpButton.MouseButton1Click:Connect(function()
         return
     end
 
-    -- Bắt đầu quá trình teleport
     startTeleportProcess()
 end)
 
