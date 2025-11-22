@@ -17,7 +17,7 @@ local iconButton = Instance.new("ImageButton")
 iconButton.Size = UDim2.new(0, 50, 0, 50)
 iconButton.Position = UDim2.new(0.05, 0, 0.05, 0) -- Vị trí ban đầu
 iconButton.BackgroundTransparency = 1
-iconButton.Image = "rbxthumb://type=Asset&id=86710626358228&w=150&h=150" -- Icon bạn yêu cầu
+iconButton.Image = "rbxthumb://type=Asset&id=128584266579507&w=150&h=150" -- Icon bạn yêu cầu
 iconButton.Parent = iconGui
 
 -- Kéo thả nút icon
@@ -112,15 +112,7 @@ end)
 -- Danh sách tab (Dễ dàng thêm tab mới)
 local tabs = {
     {name = "Page change", icon = "rbxthumb://type=Asset&id=79711600576180&w=150&h=150"},
-    {name = "Status", icon = "rbxthumb://type=Asset&id=93942197037043&w=150&h=150"},
     {name = "Home", icon = "rbxthumb://type=Asset&id=13060262582&w=150&h=150"},
-    {name = "Raid", icon = "rbxthumb://type=Asset&id=17600288795&w=150&h=150"},
-    {name = "Fruit", icon = "rbxthumb://type=Asset&id=130882648&w=150&h=150"},
-    {name = "Visual", icon = "rbxthumb://type=Asset&id=17688532644&w=150&h=150"},
-    {name = "Player", icon = "rbxthumb://type=Asset&id=11656483343&w=150&h=150"},
-    {name = "PVP", icon = "rbxthumb://type=Asset&id=4391741908&w=150&h=150"},
-    {name = "TP", icon = "rbxthumb://type=Asset&id=18155317361&w=150&h=150"},
-    {name = "Shop", icon = "rbxthumb://type=Asset&id=13429538960&w=150&h=150"},
     {name = "Tracker", icon = "rbxthumb://type=Asset&id=136258799911155&w=150&h=150"},
     {name = "Info", icon = "rbxthumb://type=Asset&id=11780939142&w=150&h=150"}
 }
